@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-executor:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:latest
 
 jobs:
   install_dependencies:
@@ -47,7 +47,7 @@ jobs:
 
   container_scan:
     docker:
-      - image: circleci/python:latest
+      - image: cimg/python:latest
     steps:
       - checkout
       - run:
@@ -57,8 +57,11 @@ jobs:
           name: Authenticate Snyk
           command: snyk auth $SNYK_TOKEN
       - run:
+          name: Build Docker Image
+          command: docker build -t goof .
+      - run:
           name: Run Snyk Container Scan
-          command: snyk container test your-docker-image --file=Dockerfile
+          command: snyk container test goof --file=Dockerfile
 
 workflows:
   version: 2
