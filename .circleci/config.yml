@@ -47,12 +47,12 @@ jobs:
 
   container_scan:
     docker:
-      - image: cimg/python:3.9  # Use a specific and verified version
+      - image: cimg/node:20.10  # Use a Node.js image to ensure compatibility with Snyk
     steps:
       - checkout
       - run:
           name: Install Snyk
-          command: pip install snyk
+          command: npm install -g snyk
       - run:
           name: Authenticate Snyk
           command: snyk auth $SNYK_TOKEN
