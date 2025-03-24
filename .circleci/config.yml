@@ -1,17 +1,74 @@
 version: 2.1
-orbs:
-  snyk: snyk/snyk@1.1.2
+
+executors:
+  node-executor:
+    docker:
+      - image: circleci/node:latest
 
 jobs:
-  snyk-scan:
-    docker:
-      - image: cimg/openjdk:11.0
-    steps:    
+  install_dependencies:
+    executor: node-executor
+    steps:
       - checkout
-      - run: mvn install
-      - snyk/scan
+      - run:
+          name: Install dependencies
+          command: npm install
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - node_modules
+
+  sca_scan:
+    executor: node-executor
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Install Snyk
+          command: npm install -g snyk
+      - run:
+          name: Authenticate Snyk
+          command: snyk auth $SNYK_TOKEN
+      - run:
+          name: Run SCA Scan
+          command: snyk test --severity-threshold=high
+      - run:
+          name: Monitor Snyk for vulnerabilities
+          command: snyk monitor
+
+  code_scan:
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Run Snyk Code Analysis
+          command: snyk code test
+
+  container_scan:
+    docker:
+      - image: circleci/python:latest
+    steps:
+      - checkout
+      - run:
+          name: Install Snyk
+          command: pip install snyk
+      - run:
+          name: Authenticate Snyk
+          command: snyk auth $SNYK_TOKEN
+      - run:
+          name: Run Snyk Container Scan
+          command: snyk container test your-docker-image --file=Dockerfile
 
 workflows:
-  build-snyk:
+  version: 2
+  scan_workflow:
     jobs:
-      - snyk-scan
+      - install_dependencies
+      - sca_scan:
+          requires:
+            - install_dependencies
+      - code_scan:
+          requires:
+            - install_dependencies
+      - container_scan
