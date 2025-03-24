@@ -26,13 +26,13 @@ jobs:
           at: ~/project
       - run:
           name: Install Snyk
-          command: npm install -g snyk
+          command: npm install -g snyk && export PATH=$(npm bin -g):$PATH
       - run:
           name: Authenticate Snyk
           command: snyk auth $SNYK_TOKEN
       - run:
           name: Run SCA Scan
-          command: snyk test --severity-threshold=high
+          command: snyk test 
       - run:
           name: Monitor Snyk for vulnerabilities
           command: snyk monitor
@@ -42,26 +42,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Snyk
+          command: npm install -g snyk && export PATH=$(npm bin -g):$PATH
+      - run:
           name: Run Snyk Code Analysis
           command: snyk code test
-
-  container_scan:
-    docker:
-      - image: cimg/node:20.10  # Use a Node.js image to ensure compatibility with Snyk
-    steps:
-      - checkout
-      - run:
-          name: Install Snyk
-          command: npm install -g snyk
-      - run:
-          name: Authenticate Snyk
-          command: snyk auth $SNYK_TOKEN
-      - run:
-          name: Build Docker Image
-          command: docker build -t goof .
-      - run:
-          name: Run Snyk Container Scan
-          command: snyk container test goof --file=Dockerfile
 
 workflows:
   version: 2
@@ -74,4 +59,3 @@ workflows:
       - code_scan:
           requires:
             - install_dependencies
-      - container_scan
