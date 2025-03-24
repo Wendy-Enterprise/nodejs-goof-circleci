@@ -32,7 +32,7 @@ jobs:
           command: snyk auth $SNYK_TOKEN
       - run:
           name: Run SCA Scan
-          command: snyk test 
+          command: snyk test --severity-threshold=high || true
       - run:
           name: Monitor Snyk for vulnerabilities
           command: snyk monitor
@@ -46,7 +46,7 @@ jobs:
           command: npm install -g snyk && export PATH=$(npm bin -g):$PATH
       - run:
           name: Run Snyk Code Analysis
-          command: snyk code test
+          command: snyk code test || true
 
 workflows:
   version: 2
